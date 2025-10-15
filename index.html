@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador RP consig</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Simulador de contratos RP</h1>
+    <button class="menu-btn" id="menuToggle">&#9776;</button>
+  </div>
+
+  <p class="desc">Adicione as informações dos contratos e o site ira fazer o calculo automaticamente</p>
+
+  <nav class="side-menu" id="sideMenu">
+    <button class="close-btn" id="closeMenu">&times;</button>
+    <ul>
+      <li onclick="closeMenu()">Simulador de Contratos</li>
+      <li>Consulta de Margem (em breve)</li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <!-- Card de entrada -->
+    <div class="card" id="inputCard">
+      <label>Valor da Parcela:</label>
+      <input type="number" id="inputValor" placeholder="Ex: 500" step="0.01" />
+      <label>Taxa Mensal (%):</label>
+      <input type="number" id="inputTaxa" placeholder="Ex: 1,2" step="0.01" />
+      <label>Quantidade de Parcelas:</label>
+      <input type="number" id="inputQtd" placeholder="Ex: 120" />
+      <button id="addContract">Adicionar Contrato</button>
+    </div>
+
+    <!-- Resultados totais -->
+    <div class="results" id="results"></div>
+
+    <!-- Lista de contratos adicionados -->
+    <div id="contracts"></div>
+  </div>
+
+  <script>
+    const valorInput = document.getElementById("inputValor");
+    const taxaInput = document.getElementById("inputTaxa");
+    const qtdInput = document.getElementById("inputQtd");
+    const addContractBtn = document.getElementById("addContract");
+    const contractsDiv = document.getElementById("contracts");
+    const resultsDiv = document.getElementById("results");
+
+    const menuBtn = document.getElementById("menuToggle");
+    const closeBtn = document.getElementById("closeMenu");
+    const sideMenu = document.getElementById("sideMenu");
+
+    // Abrir menu
+    menuBtn.addEventListener("click", () => {
+      sideMenu.classList.add("active");
+      menuBtn.style.display = "none";
+    });
+
+    // Fechar menu
+    closeBtn.addEventListener("click", () => {
+      sideMenu.classList.remove("active");
+      menuBtn.style.display = "inline-block";
+    });
+
+    function closeMenu() {
+      sideMenu.classList.remove("active");
+      menuBtn.style.display = "inline-block";
+    }
+
+    let contratos = [];
+
+    // Adicionar contrato
+    addContractBtn.addEventListener("click", () => {
+      const valor = parseFloat(valorInput.value) || 0;
+      const taxa = parseFloat(taxaInput.value) || 0;
+      const qtd = parseInt(qtdInput.value) || 0;
+
+      if(valor <= 0 || qtd <= 0) {
+        alert("Preencha valores válidos.");
+        return;
+      }
+
+      contratos.push({ valor, taxa, qtd });
+
+      // Limpa os inputs
+      valorInput.value = "";
+      taxaInput.value = "";
+      qtdInput.value = "";
+
+      atualizarResultados();
+      atualizarLista();
+    });
+
+    // Atualizar lista de contratos
+    function atualizarLista() {
+      contractsDiv.innerHTML = "";
+      contratos.forEach(c => {
+        const div = document.createElement("div");
+        div.classList.add("card");
+        div.innerHTML = `
+          <p>Valor da Parcela: ${formatarMoeda(c.valor)}</p>
+          <p>Taxa Mensal: ${c.taxa.toFixed(2)}%</p>
+          <p>Quantidade de Parcelas: ${c.qtd}</p>
+        `;
+        contractsDiv.appendChild(div);
+      });
+    }
+
+    // Formatar moeda
+    function formatarMoeda(valor) {
+      return valor.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    // Atualizar resultados
+    function atualizarResultados() {
+      let totalTaxa = 0;
+      let totalParcelas = 0;
+      let totalMensal = 0;
+      let totalGeral = 0;
+
+      contratos.forEach(c => {
+        totalTaxa += c.taxa;
+        totalParcelas += c.qtd;
+        totalMensal += c.valor;
+        totalGeral += c.valor * c.qtd;
+      });
+
+      resultsDiv.innerHTML = `
+        <p>Total de Parcelas: <span class="highlight">${totalParcelas}</span></p>
+        <p>Taxa Total do Mês: <span class="highlight">${totalTaxa.toFixed(2)}%</span></p>
+        <p>Custo Total Mensal: <span class="highlight">${formatarMoeda(totalMensal)}</span></p>
+        <p>Valor Total Parcelado: <span class="highlight">${formatarMoeda(totalGeral)}</span></p>
+      `;
+    }
+  </script>
+</body>
+</html>
